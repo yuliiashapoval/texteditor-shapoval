@@ -6,10 +6,11 @@ void help() {
     printf("\n Text Editor \n"
            "1. Append text symbols to the end\n"
            "2. Start the new line\n"
-           "3. Use files to load/save the information\n"
-           "4. Print the current text to console\n"
-           "5. Insert the text by line and symbol index\n"
-           "6. Search\n"
+           "3. Use files to load the information\n"
+           "4. Use files to save the information\n"
+           "5. Print the current text to console\n"
+           "6. Insert the text by line and symbol index\n"
+           "7. Search\n"
            "0. Exit\n"
            "Choose the command: ");
 }
@@ -78,6 +79,30 @@ void printAll(struct Editor* ed) {
     }
 }
 
+void saveToFile(struct Editor* ed) {
+    char filename[256];
+    printf("enter the filename for savings: ");
+    scanf(" %s", filename);
+
+    FILE* file;
+    file = fopen(filename, "w");
+
+    if (file != NULL) {
+        struct LineNode* current = (*ed).head;
+        while (current != NULL) {
+            fputs((*current).text, file);
+            fputs("\n", file);
+            current = (*current).next;
+        }
+
+        fclose(file);
+        printf("saved successfully\n");
+    }
+    else {
+        printf("error opening file");
+    }
+}
+
 int main() {
     struct Editor* myEditor = createEditor();
     int command;
@@ -94,6 +119,9 @@ int main() {
             newLine(myEditor);
         }
         else if (command == 4) {
+            saveToFile(myEditor);
+        }
+        else if (command == 5) {
             printAll(myEditor);
         }
         else if (command == 0) {
