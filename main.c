@@ -64,6 +64,20 @@ void append(struct Editor* ed) {
     strcat((*temp).text, input);
 }
 
+void printAll(struct Editor* ed) {
+    struct LineNode* current = (*ed).head;
+    if (current == NULL) {
+        printf("editor is empty");
+        return;
+    }
+
+    printf("\n Current text: ");
+    while (current != NULL) {
+        printf("%s\n", (*current).text);
+        current = (*current).next;
+    }
+}
+
 int main() {
     struct Editor* myEditor = createEditor();
     int command;
@@ -78,6 +92,9 @@ int main() {
         }
         else if (command == 2) {
             newLine(myEditor);
+        }
+        else if (command == 4) {
+            printAll(myEditor);
         }
         else if (command == 0) {
             break;
