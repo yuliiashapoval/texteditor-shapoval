@@ -103,6 +103,33 @@ void saveToFile(struct Editor* ed) {
     }
 }
 
+void loadFromFile(struct Editor* ed) {
+    char filename[256];
+    printf("enter the filename for load: ");
+    scanf(" %s", filename);
+
+    FILE* file;
+    char mystring[1024];
+
+    file = fopen(filename, "r");
+    if (file == NULL) {
+        printf("error opening the file\n");
+    }
+    else {
+        while (fgets(mystring, 1024, file) != NULL) {
+            mystring[strcspn(mystring, "\n")] = '\0';
+
+            newLine(ed);
+
+            struct LineNode* temp = (*ed).head;
+            while ((*temp).next != NULL) temp = (*temp).next;
+            strcpy ((*temp).text, mystring);
+        }
+        fclose(file);
+        printf("loaded successfully");
+    }
+}
+
 int main() {
     struct Editor* myEditor = createEditor();
     int command;
@@ -117,6 +144,9 @@ int main() {
         }
         else if (command == 2) {
             newLine(myEditor);
+        }
+        else if (command == 3) {
+            loadFromFile(myEditor);
         }
         else if (command == 4) {
             saveToFile(myEditor);
