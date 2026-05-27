@@ -89,14 +89,19 @@ void saveToFile(struct Editor* ed) {
 
     if (file != NULL) {
         struct LineNode* current = (*ed).head;
-        while (current != NULL) {
-            fputs((*current).text, file);
-            fputs("\n", file);
-            current = (*current).next;
+        if (current == NULL) {
+            printf("nothing to save");
         }
+        else {
+            while (current != NULL) {
+                fputs((*current).text, file);
+                fputs("\n", file);
+                current = (*current).next;
+            }
 
-        fclose(file);
-        printf("saved successfully\n");
+            fclose(file);
+            printf("saved successfully\n");
+        }
     }
     else {
         printf("error opening file");
@@ -137,7 +142,7 @@ void search(struct Editor* ed) {
 
     struct LineNode* current = (*ed).head;
     int lineNumber = 0;
-
+    int foundany = 0;
 
     while (current != NULL) {
         char* text = (*current).text;
@@ -150,11 +155,15 @@ void search(struct Editor* ed) {
             }
             if (target[b] == '\0') {
                 printf("found in line %d: %s \n", lineNumber, text);
+                foundany = 1;
                 break;
             }
         }
         current = (*current).next;
         lineNumber++;
+    }
+    if (foundany == 0) {
+        printf("non found\n");
     }
 }
 
@@ -207,9 +216,13 @@ int main() {
     int command;
     while (1) {
         help();
-        if (scanf("%d", &command) != 1 || command > 6) {
+        if (scanf("%d", &command) != 1 || command > 7) {
             printf("Invalid input. Please choose from the list \n");
+            while (getchar() != '\n');
+            continue;
         };
+
+        while (getchar() != '\n');
 
         if (command == 1) {
             append(myEditor);
