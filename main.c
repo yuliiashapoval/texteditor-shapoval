@@ -158,6 +158,50 @@ void search(struct Editor* ed) {
     }
 }
 
+void insertByIndex(struct Editor* ed) {
+    int linei, chari;
+    char textToInsert[256];
+
+    printf("enter line and symbol index: ");
+    scanf("%d %d", &linei, &chari);
+    printf("enter text to insert: ");
+    scanf(" %[^\n]", textToInsert);
+
+    struct LineNode* current = (*ed).head;
+    for (int i = 0; i < linei && current != NULL; i++) {
+        current = (*current).next;
+    }
+
+    if (current != NULL) {
+        char oldtext[1024];
+        int len = 0;
+        while ((*current).text[len] != '\0') {
+            oldtext[len] = (*current).text[len];
+            len++;
+        }
+        oldtext[len] = '\0';
+
+        int result = 0;
+        for (int i = 0; i < chari && oldtext[i] != '\0'; i++) {
+            (*current).text[result++] = oldtext[i];
+        }
+
+        for (int i = 0; textToInsert[i] != '\0'; i++) {
+            (*current).text[result++] = textToInsert[i];
+        }
+
+        for (int i = chari; oldtext[i] != '\0'; i++) {
+            (*current).text[result++] = oldtext[i];
+        }
+
+        (*current).text[result] = '\0';
+        printf("inserted successfully");
+    }
+    else {
+        printf("line non found");
+    }
+}
+
 int main() {
     struct Editor* myEditor = createEditor();
     int command;
@@ -181,6 +225,9 @@ int main() {
         }
         else if (command == 5) {
             printAll(myEditor);
+        }
+        else if (command == 6) {
+            insertByIndex(myEditor);
         }
         else if (command == 7) {
             search(myEditor);
