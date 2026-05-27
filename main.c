@@ -130,6 +130,34 @@ void loadFromFile(struct Editor* ed) {
     }
 }
 
+void search(struct Editor* ed) {
+    char target[256];
+    printf("enter text to search: ");
+    scanf(" %[^\n]", target);
+
+    struct LineNode* current = (*ed).head;
+    int lineNumber = 0;
+
+
+    while (current != NULL) {
+        char* text = (*current).text;
+
+        for (int a = 0; text[a] != '\0'; a++) {
+            int b = 0;
+
+            while (target[b] != '\0' && text[a + b] != '\0' && text[a + b] == target[b]) {
+                b++;
+            }
+            if (target[b] == '\0') {
+                printf("found in line %d: %s \n", lineNumber, text);
+                break;
+            }
+        }
+        current = (*current).next;
+        lineNumber++;
+    }
+}
+
 int main() {
     struct Editor* myEditor = createEditor();
     int command;
@@ -153,6 +181,9 @@ int main() {
         }
         else if (command == 5) {
             printAll(myEditor);
+        }
+        else if (command == 7) {
+            search(myEditor);
         }
         else if (command == 0) {
             break;

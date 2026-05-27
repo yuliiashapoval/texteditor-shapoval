@@ -1,3 +1,4 @@
+
 cmake_minimum_required(VERSION 4.2)
 project(texteditor_shapoval C)
 
