@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 void help() {
     printf("\n Text Editor \n"
@@ -62,7 +61,17 @@ void append(struct Editor* ed) {
     while ((*temp).next != NULL) {
         temp = (*temp).next;
     }
-    strcat((*temp).text, input);
+    int i = 0;
+    while ((*temp).text[i] != '\0') {
+        i++;
+    }
+    int j = 0;
+    while (input[j] != '\0') {
+        (*temp).text[i] = input[j];
+        i++;
+        j++;
+    }
+    (*temp).text[i] = '\0';
 }
 
 void printAll(struct Editor* ed) {
@@ -122,13 +131,25 @@ void loadFromFile(struct Editor* ed) {
     }
     else {
         while (fgets(mystring, 1024, file) != NULL) {
-            mystring[strcspn(mystring, "\n")] = '\0';
+            int i = 0;
+            while (mystring[i] != '\0') {
+                if (mystring[i] == '\n') {
+                    mystring[i] = '\0';
+                    break;
+                }
+                i++;
+            }
 
             newLine(ed);
 
             struct LineNode* temp = (*ed).head;
             while ((*temp).next != NULL) temp = (*temp).next;
-            strcpy ((*temp).text, mystring);
+            int k = 0;
+            while (mystring[k] != '\0') {
+                (*temp).text[k] =mystring[k];
+                k++;
+            }
+            (*temp).text[k] = '\0';
         }
         fclose(file);
         printf("loaded successfully");
