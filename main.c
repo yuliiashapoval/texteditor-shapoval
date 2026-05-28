@@ -232,6 +232,20 @@ void insertByIndex(struct Editor* ed) {
     }
 }
 
+void cleanMemory(struct Editor* ed) {
+    struct LineNode* current = (*ed).head;
+    struct LineNode* temporary;
+
+    while (current != NULL) {
+        temporary = (*current).next;
+
+        free((*current).text);
+        free(current);
+        current = temporary;
+    }
+    free(ed);
+}
+
 int main() {
     struct Editor* myEditor = createEditor();
     int command;
@@ -267,6 +281,7 @@ int main() {
             search(myEditor);
         }
         else if (command == 0) {
+            cleanMemory(myEditor);
             break;
         }
         else {
