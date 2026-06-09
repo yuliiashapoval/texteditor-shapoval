@@ -10,6 +10,9 @@ void help() {
            "5. Print the current text to console\n"
            "6. Insert the text by line and symbol index\n"
            "7. Search\n"
+           "8. Delete\n"
+           "11. Cut\n"
+           "13. Copy\n"
            "0. Exit\n"
            "Choose the command: ");
 }
@@ -28,6 +31,8 @@ struct Editor* createEditor() {
     (*ed).head = NULL;
     return ed;
 }
+
+char clipboard[1024] = "";
 
 void newLine(struct Editor* ed) {
     struct LineNode* newNode = malloc(sizeof(struct LineNode));
@@ -246,12 +251,69 @@ void cleanMemory(struct Editor* ed) {
     free(ed);
 }
 
+void copy(struct Editor* ed, int linei, int chari, int count) {
+    struct LineNode* current = (*ed).head;
+
+    for (int i = 0; i < linei && current != NULL; i++) {
+        current = (*current).next;
+    }
+    if (current == NULL) {
+        printf("Line not found");
+        return;
+    }
+
+    int len = 0;
+    while ((*current).text[len] != '\0') {
+        len++;
+    }
+    if (chari >= len) {
+        clipboard[0] = '\0';
+        return;
+    }
+
+    int clip_index = 0;
+    while (clip_index < count && (*current).text[chari + clip_index] != '\0') {
+        clipboard[clip_index] = (*current).text[chari + clip_index];
+        clip_index++;
+    }
+    clipboard[clip_index] = '\0';
+}
+
+void delete(struct Editor* ed, int linei, int chari, int count) {
+    struct LineNode* current = (*ed).head;
+
+    for (int i = 0; i < linei && current != NULL; i++) {
+        current = (*current).next;
+    }
+    if (current == NULL) return;
+
+    int len = 0;
+    while ((*current).text[len] != '\0') len++;
+
+    if (chari >= len) return;
+    if (chari + count > len) {
+        count = len - chari;
+    }
+
+    int i = chari;
+    while ((*current).text[i + count] != '\0') {
+        (*current).text[i] = (*current).text[i + count];
+        i++;
+    }
+    (*current).text[i] = '\0';
+}
+
+void cut(struct Editor* ed, int linei, int chari, int count) {
+    copy(ed, linei, chari, count);
+    delete(ed, linei, chari, count);
+}
+
 int main() {
     struct Editor* myEditor = createEditor();
     int command;
     while (1) {
         help();
-        if (scanf("%d", &command) != 1 || command > 7) {
+        if (scanf("%d", &command) != 1 || command > 15) {
             printf("Invalid input. Please choose from the list \n");
             while (getchar() != '\n');
             continue;
@@ -279,6 +341,21 @@ int main() {
         }
         else if (command == 7) {
             search(myEditor);
+        }
+        else if (command == 8) {
+            int l, c, count;
+            scanf("%d %d %d", &l, &c, &count);
+            delete(myEditor, l, c, count);
+        }
+        else if (command == 11) {
+            int l, c, count;
+            scanf("%d %d %d", &l, &c, &count);
+            cut(myEditor, l, c, count);
+        }
+        else if (command == 13) {
+            int l, c, count;
+            scanf("%d %d %d", &l, &c, &count);
+            copy(myEditor, l, c, count);
         }
         else if (command == 0) {
             cleanMemory(myEditor);
