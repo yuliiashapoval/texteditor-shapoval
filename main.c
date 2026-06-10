@@ -11,7 +11,10 @@ void help() {
            "6. Insert the text by line and symbol index\n"
            "7. Search\n"
            "8. Delete\n"
+           "9. Undo\n"
+           "10. Redo\n"
            "11. Cut\n"
+           "12. Paste\n"
            "13. Copy\n"
            "0. Exit\n"
            "Choose the command: ");
@@ -194,11 +197,15 @@ void search(struct Editor* ed) {
 }
 
 void insertByIndex(struct Editor* ed) {
-    int linei, chari;
+    int linei, chari, mode;
     char textToInsert[256];
 
     printf("enter line and symbol index: ");
     scanf("%d %d", &linei, &chari);
+
+    printf("Choose mode (0 - Regular Insert, 1 - Replacement Mode): ");
+    scanf("%d", &mode);
+
     printf("enter text to insert: ");
     scanf(" %[^\n]", textToInsert);
 
@@ -225,10 +232,19 @@ void insertByIndex(struct Editor* ed) {
             (*current).text[result++] = textToInsert[i];
         }
 
-        for (int i = chari; oldtext[i] != '\0'; i++) {
-            (*current).text[result++] = oldtext[i];
+        if (mode == 0) {
+            for (int i = chari; oldtext[i] != '\0'; i++) {
+                (*current).text[result++] = oldtext[i];
+            }
         }
+        else {
+            int insertLen = 0;
+            while (textToInsert[insertLen] != '\0') insertLen++;
 
+            for (int i = chari + insertLen; oldtext[i] != '\0'; i++) {
+                (*current).text[result++] = oldtext[i];
+            }
+        }
         (*current).text[result] = '\0';
         printf("inserted successfully");
     }
@@ -318,27 +334,70 @@ void cut(struct Editor* ed, int linei, int chari, int count) {
     delete(ed, linei, chari, count);
 }
 
+void paste(struct Editor* ed, int linei, int chari) {
+    struct LineNode* current = (*ed).head;
+
+    for (int i = 0; i < linei && current != NULL; i++) {
+        current = (*current).next;
+    }
+
+    if (current == NULL) {
+        printf("\n Line does not exist!\n", linei);
+        return;
+    }
+
+    int len = 0;
+    while ((*current).text[len] != '\0') len++;
+
+    int clipLen = 0;
+    while (clipboard[clipLen] != '\0') clipLen++;
+
+    if (clipLen == 0) {
+        printf("\n Clipboard is empty!\n");
+        return;
+    }
+
+    if (chari > len) chari = len;
+
+    for (int i = len; i >= chari; i--) {
+        (*current).text[i + clipLen] = (*current).text[i];
+    }
+
+    for (int i = 0; i < clipLen; i++) {
+        (*current).text[chari + i] = clipboard[i];
+    }
+
+    printf("\n Pasted successfully!\n");
+}
+
 void deleteCommand(struct Editor* ed) {
     int l, c, count;
     printf("enter line, index and amount to delete: ");
-    scanf("%d %d %d", &l, &c, &count);
+    scanf(" %d %d %d", &l, &c, &count);
     delete(ed, l, c, count);
 }
 
 void copyCommand(struct Editor* ed) {
     int l, c, count;
     printf("enter line, index and amount to copy: ");
-    scanf("%d %d %d", &l, &c, &count);
+    scanf(" %d %d %d", &l, &c, &count);
     copy(ed, l, c, count);
 }
 
 void cutCommand(struct Editor* ed) {
     int l, c, count;
     printf("enter line, index and amount to cut: ");
-    scanf("%d %d %d", &l, &c, &count);
+    scanf(" %d %d %d", &l, &c, &count);
 
     copy(ed, l, c, count);
     delete(ed, l, c, count);
+}
+
+void pasteCommand(struct Editor* ed) {
+    int l, c;
+    printf("Choose line and index: ");
+    scanf(" %d %d", &l, &c);
+    paste(ed, l, c);
 }
 
 int main() {
@@ -380,6 +439,9 @@ int main() {
         }
         else if (command == 11) {
            cutCommand(myEditor);
+        }
+        else if (command == 12) {
+            pasteCommand(myEditor);
         }
         else if (command == 13) {
            copyCommand(myEditor);
