@@ -258,7 +258,7 @@ void copy(struct Editor* ed, int linei, int chari, int count) {
         current = (*current).next;
     }
     if (current == NULL) {
-        printf("Line not found");
+        printf("\n Line not found");
         return;
     }
 
@@ -268,6 +268,7 @@ void copy(struct Editor* ed, int linei, int chari, int count) {
     }
     if (chari >= len) {
         clipboard[0] = '\0';
+        printf("\n Index is out of bounds (line length is %d)\n", chari, len);
         return;
     }
 
@@ -277,6 +278,8 @@ void copy(struct Editor* ed, int linei, int chari, int count) {
         clip_index++;
     }
     clipboard[clip_index] = '\0';
+
+    printf("\n Copied to clipboard: \"%s\"\n", clipboard);
 }
 
 void delete(struct Editor* ed, int linei, int chari, int count) {
@@ -285,12 +288,18 @@ void delete(struct Editor* ed, int linei, int chari, int count) {
     for (int i = 0; i < linei && current != NULL; i++) {
         current = (*current).next;
     }
-    if (current == NULL) return;
+    if (current == NULL) {
+        printf("\n Line not found");
+        return;
+    }
 
     int len = 0;
     while ((*current).text[len] != '\0') len++;
 
-    if (chari >= len) return;
+    if (chari >= len) {
+        printf("\n Index is out of bounds (line length is %d) \n", chari, len);
+        return;
+    }
     if (chari + count > len) {
         count = len - chari;
     }
@@ -301,11 +310,35 @@ void delete(struct Editor* ed, int linei, int chari, int count) {
         i++;
     }
     (*current).text[i] = '\0';
+    printf("\n Deleted successfully!\n");
 }
 
 void cut(struct Editor* ed, int linei, int chari, int count) {
     copy(ed, linei, chari, count);
     delete(ed, linei, chari, count);
+}
+
+void deleteCommand(struct Editor* ed) {
+    int l, c, count;
+    printf("enter line, index and amount to delete: ");
+    scanf("%d %d %d", &l, &c, &count);
+    delete(ed, l, c, count);
+}
+
+void copyCommand(struct Editor* ed) {
+    int l, c, count;
+    printf("enter line, index and amount to copy: ");
+    scanf("%d %d %d", &l, &c, &count);
+    copy(ed, l, c, count);
+}
+
+void cutCommand(struct Editor* ed) {
+    int l, c, count;
+    printf("enter line, index and amount to cut: ");
+    scanf("%d %d %d", &l, &c, &count);
+
+    copy(ed, l, c, count);
+    delete(ed, l, c, count);
 }
 
 int main() {
@@ -343,19 +376,13 @@ int main() {
             search(myEditor);
         }
         else if (command == 8) {
-            int l, c, count;
-            scanf("%d %d %d", &l, &c, &count);
-            delete(myEditor, l, c, count);
+           deleteCommand(myEditor);
         }
         else if (command == 11) {
-            int l, c, count;
-            scanf("%d %d %d", &l, &c, &count);
-            cut(myEditor, l, c, count);
+           cutCommand(myEditor);
         }
         else if (command == 13) {
-            int l, c, count;
-            scanf("%d %d %d", &l, &c, &count);
-            copy(myEditor, l, c, count);
+           copyCommand(myEditor);
         }
         else if (command == 0) {
             cleanMemory(myEditor);
