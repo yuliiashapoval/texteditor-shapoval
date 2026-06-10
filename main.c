@@ -35,6 +35,47 @@ struct Editor* createEditor() {
     return ed;
 }
 
+struct History {
+    struct LineNode* undo[3];
+    struct LineNode* redo[3];
+    int undoCount;
+    int redoCount;
+};
+
+struct LineNode* copyLines(struct LineNode* head) {
+    if (head == NULL) {
+        return NULL;
+    }
+
+    struct LineNode* newHead = NULL;
+    struct LineNode* newTail = NULL;
+    struct LineNode* current = head;
+
+    while (current != NULL) {
+        struct LineNode* newNode = malloc(sizeof(struct LineNode));
+        (*newNode).text = malloc(1024 * sizeof(char));
+
+        int i = 0;
+        while ((*current).text[i] != '\0') {
+            (*newNode).text[i] = (*current).text[i];
+            i++;
+        }
+        (*newNode).text[i] = '\0';
+        (*newNode).next = NULL;
+
+        if (newHead == NULL) {
+            newHead = newNode;
+            newTail = newNode;
+        }
+        else {
+            (*newTail).next = newNode;
+            newTail = newNode;
+        }
+        current = (*current).next;
+    }
+    return newHead;
+}
+
 char clipboard[1024] = "";
 
 void newLine(struct Editor* ed) {
@@ -54,6 +95,18 @@ void newLine(struct Editor* ed) {
         (*temp).next = newNode;
     }
     printf("new line had been added\n");
+}
+
+void freeLines(struct LineNode* head) {
+    struct LineNode* current = head;
+    struct LineNode* temp;
+
+    while (current != NULL) {
+        temp = (*current).next;
+        free((*current).text);
+        free(current);
+        current = temp;
+    }
 }
 
 void append(struct Editor* ed) {
@@ -369,6 +422,75 @@ void paste(struct Editor* ed, int linei, int chari) {
 
     printf("\n Pasted successfully!\n");
 }
+void undo(struct Editor* ed, struct History* history) {
+    if ((*history).undoCount == 0) {
+        printf("\n Nothing to undo\n");
+        return;
+    }
+
+    if ((*history).redoCount == 3) {
+        freeLines((*history).redo[0]);
+
+        (*history).redo[0] = (*history).redo[1];
+        (*history).redo[1] = (*history).redo[2];
+        (*history).redoCount = 2;
+    }
+
+    (*history).redo[(*history).redoCount] = copyLines((*ed).head);
+    (*history).redoCount++;
+
+    freeLines((*ed).head);
+
+    (*history).undoCount--;
+    (*ed).head = copyLines((*history).undo[(*history).undoCount]);
+    freeLines((*history).undo[(*history).undoCount]);
+
+    printf("\n Undo completed\n");
+}
+
+void saveUndo(struct Editor* ed, struct History* history) {
+    if ((*history).undoCount == 3) {
+        freeLines((*history).undo[0]);
+
+        (*history).undo[0] = (*history).undo[1];
+        (*history).undo[1] = (*history).undo[2];
+        (*history).undoCount = 2;
+    }
+
+    (*history).undo[(*history).undoCount] = copyLines((*ed).head);
+    (*history).undoCount++;
+
+    for (int i = 0; i < (*history).redoCount; i++) {
+        freeLines((*history).redo[i]);
+    }
+    (*history).redoCount = 0;
+}
+
+void redo(struct Editor* ed, struct History* history) {
+    if ((*history).redoCount == 0) {
+        printf("\n Nothing to redo\n");
+        return;
+    }
+
+    if ((*history).undoCount == 3) {
+        freeLines((*history).undo[0]);
+
+        (*history).undo[0] = (*history).undo[1];
+        (*history).undo[1] = (*history).undo[2];
+        (*history).undoCount = 2;
+    }
+
+    (*history).undo[(*history).undoCount] = copyLines((*ed).head);
+    (*history).undoCount++;
+
+    freeLines((*ed).head);
+
+    (*history).redoCount--;
+    (*ed).head = copyLines((*history).redo[(*history).redoCount]);
+    freeLines((*history).redo[(*history).redoCount]);
+
+    printf("\n Redo completed\n");
+}
 
 void deleteCommand(struct Editor* ed) {
     int l, c, count;
@@ -402,6 +524,11 @@ void pasteCommand(struct Editor* ed) {
 
 int main() {
     struct Editor* myEditor = createEditor();
+
+    struct History history;
+    history.undoCount = 0;
+    history.redoCount = 0;
+
     int command;
     while (1) {
         help();
@@ -414,9 +541,11 @@ int main() {
         while (getchar() != '\n');
 
         if (command == 1) {
+            saveUndo(myEditor, &history);
             append(myEditor);
         }
         else if (command == 2) {
+            saveUndo(myEditor, &history);
             newLine(myEditor);
         }
         else if (command == 3) {
@@ -429,18 +558,28 @@ int main() {
             printAll(myEditor);
         }
         else if (command == 6) {
+            saveUndo(myEditor, &history);
             insertByIndex(myEditor);
         }
         else if (command == 7) {
             search(myEditor);
         }
         else if (command == 8) {
-           deleteCommand(myEditor);
+            saveUndo(myEditor, &history);
+            deleteCommand(myEditor);
+        }
+        else if (command == 9) {
+            undo(myEditor, &history);
+        }
+        else if (command == 10) {
+            redo(myEditor, &history);
         }
         else if (command == 11) {
-           cutCommand(myEditor);
+            saveUndo(myEditor, &history);
+            cutCommand(myEditor);
         }
         else if (command == 12) {
+            saveUndo(myEditor, &history);
             pasteCommand(myEditor);
         }
         else if (command == 13) {
